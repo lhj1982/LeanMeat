@@ -4,12 +4,13 @@ import getWeb3 from '../utils/getWeb3';
 import truffleContract from 'truffle-contract';
 // import Button from 'react-bootstrap/lib/Button';
 import { Form, FormControl, FormGroup, ControlLabel, Col, Button, Tooltip, HelpBlock, Panel, PanelGroup } from 'react-bootstrap';
+import Popup from '../utils/Popup';
 import Products from '../product/Products';
 import Users from '../admin/Users';
 const producerAddress = '0x0d1d4e623D10F9FBA5Db95830F7d3839406C6AF2';
 
 class Producer extends Component {
-  state = { users: undefined, productId: undefined, selectedProducerAddress: undefined, newProductId: undefined, newProductCategory: 'select', newProductDescription: undefined };
+  state = { showPopup: false, errorMessage: undefined, users: undefined, productId: undefined, selectedProducerAddress: undefined, newProductId: undefined, newProductCategory: 'select', newProductDescription: undefined };
 
   componentDidMount = async () => {
     try {
@@ -109,10 +110,17 @@ class Producer extends Component {
     const contract = this.state.contract;
 
     try {
-      contract.productPacked(parseInt(productId, 10), productCategory, productDescription, {from: selectedProducerAddress});
+      await contract.productPacked(parseInt(productId, 10), productCategory, productDescription, {from: selectedProducerAddress});
     } catch (err) {
+      this.setState({showPopup: true, errorMessage: 'Error when pack product!'});
       console.error('Error when pack product', err);
     }
+  }
+
+  togglePopup = () => {
+    this.setState({
+      showPopup: !this.state.showPopup
+    });
   }
 
   render() {
@@ -123,6 +131,13 @@ class Producer extends Component {
       <div>
         <h2>Producer</h2>
 
+        {this.state.showPopup ? 
+          <Popup
+            text={this.state.errorMessage}
+            closePopup={this.togglePopup}
+          />
+          : null
+        }
         <Users users={this.state.users} />
         <Panel bsStyle="primary">
           <Panel.Heading>

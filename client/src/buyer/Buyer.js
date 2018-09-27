@@ -4,12 +4,13 @@ import getWeb3 from '../utils/getWeb3';
 import truffleContract from 'truffle-contract';
 // import Button from 'react-bootstrap/lib/Button';
 import { Form, FormControl, FormGroup, ControlLabel, Col, Button, Tooltip, HelpBlock, Panel, PanelGroup } from 'react-bootstrap';
+import Popup from '../utils/Popup';
 import Products from '../product/Products';
 import Users from '../admin/Users';
 const producerAddress = '0x0d1d4e623D10F9FBA5Db95830F7d3839406C6AF2';
 
 class Buyer extends Component {
-  state = { users: undefined, productId: undefined, selectedProducerAddress: undefined, newProductId: undefined };
+  state = { showPopup: false, errorMessage: undefined, users: undefined, productId: undefined, selectedBuyerAddress: undefined, newProductId: undefined };
 
   componentDidMount = async () => {
     try {
@@ -67,8 +68,8 @@ class Buyer extends Component {
      this.setState({productId: e.target.value});
   }
 
-  handleSelectedProducerAddressChange = (e) => {
-    this.setState({selectedProducerAddress: e.target.value});
+  handleSelectedBuyerAddressChange = (e) => {
+    this.setState({selectedBuyerAddress: e.target.value});
   }
 
   handleNewProductIdChange = (e) => {
@@ -102,15 +103,22 @@ class Buyer extends Component {
   }
 
   buyProduct = async () => {
-    const selectedProducerAddress = this.state.selectedProducerAddress;
+    const selectedBuyerAddress = this.state.selectedBuyerAddress;
     const productId = this.state.newProductId;
     const contract = this.state.contract;
 
     try {
-      contract.productBought(parseInt(productId, 10), {from: selectedProducerAddress});
+      await contract.productBought(parseInt(productId, 10), {from: selectedBuyerAddress});
     } catch (err) {
+      this.setState({showPopup: true, errorMessage: 'Error when buy product!'});
       console.error('Error when buy product', err);
     }
+  }
+
+  togglePopup = () => {
+    this.setState({
+      showPopup: !this.state.showPopup
+    });
   }
 
   render() {
@@ -120,7 +128,14 @@ class Buyer extends Component {
     return (
       <div>
         <h2>Buyer</h2>
-
+        
+        {this.state.showPopup ? 
+          <Popup
+            text={this.state.errorMessage}
+            closePopup={this.togglePopup}
+          />
+          : null
+        }
         <Users users={this.state.users} />
         <Panel bsStyle="primary">
           <Panel.Heading>
@@ -149,16 +164,16 @@ class Buyer extends Component {
             <Panel.Title componentClass="h3">Buy Product</Panel.Title>
           </Panel.Heading>
           <Panel.Body>
-            <FormGroup controlId="selectedProducerAddress">
-              <ControlLabel>Select A Producer</ControlLabel>
+            <FormGroup controlId="selectedBuyerAddress">
+              <ControlLabel>Select A Buyer</ControlLabel>
               <FormControl
-                name='selectedProducerAddress'
-                htmlFor='selectedProducerAddress'
+                name='selectedBuyerAddress'
+                htmlFor='selectedBuyerAddress'
                 type='text'
                 label='Product Address'
-                value={this.state.selectedProducerAddress}
+                value={this.state.selectedBuyerAddress}
                 placeholder='Enter producer address'
-                onChange={this.handleSelectedProducerAddressChange}
+                onChange={this.handleSelectedBuyerAddressChange}
               />
             </FormGroup>
             <FormGroup controlId="newProductId" validationState={this.getNewProductIdValidationState()}>
